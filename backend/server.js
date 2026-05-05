@@ -36,6 +36,9 @@ io.on('connection', (socket) => {
     socket.to(ROOM).emit("typing",userName)
 
   } )
+socket.on("stop-typing", (userName) => {
+  socket.to(ROOM).emit("user-stopped-typing", userName);
+});
 
 
   socket.on('disconnect', () => {

@@ -25,17 +25,31 @@ function App() {
   const [text, setText] = useState("");
   const chatEndRef = useRef(null);
   const socket = useRef(null);
+  const isTyping = useRef(false);
 
 useEffect(() => {
-  // 1. Don't do anything if there's no text or no user
-  if (!text.trim() || !userName) return;
-
-  // 2. Set a timeout to emit the event after 500ms of "silence"
-  const typingTimer = setTimeout(() => {
-    if (socket.current) {
-      socket.current.emit("typing", userName);
+  // 1. Guard clause
+  if (!text.trim() || !userName) {
+    // If text is cleared, stop typing immediately
+    if (isTyping.current) {
+      socket.current?.emit("stop-typing", userName);
+      isTyping.current = false;
     }
-  }, 500);
+    return;
+  }
+
+  // 2. Start Typing: Emit immediately on the first keystroke
+  if (!isTyping.current) {
+    isTyping.current = true;
+    socket.current?.emit("typing", userName);
+  }
+
+  // 3. Stop Typing: Debounce the "stop" event
+  const typingTimer = setTimeout(() => {
+    socket.current?.emit("stop-typing", userName);
+    isTyping.current = false;
+  }, 1000); // Usually 1s is better for "stop" to avoid flickering
+
   return () => clearTimeout(typingTimer);
 }, [text, userName]);
 
@@ -58,6 +72,7 @@ useEffect(() => {
         ]);
       });
       socket.current.on("chatMessage", (message) => {
+        if (message.sender === userName) return;
         const incomingMsg = { ...message, isMe: false };
         setMessages((prev) => [...prev, incomingMsg]);
         console.log(message);
@@ -80,6 +95,17 @@ useEffect(() => {
   }, 3000);
       });
     });
+
+    return ()=>{
+      socket.current.off('oneJoin')
+      socket.current.off('chatMessage')
+      socket.current.off('typing')
+    }
+
+
+
+
+
   }, []);
 
   const handleNameSubmit = () => {
@@ -125,7 +151,7 @@ useEffect(() => {
               <div className="w-10 h-10 border-2 border-white rounded-sm" />
             </div>
             <h1 className="text-2xl font-light mb-8">
-              WhatsApp <span className="font-bold">Minimal</span>
+              <span className="font-bold">Anonimity</span>
             </h1>
             <input
               type="text"
