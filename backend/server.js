@@ -5,7 +5,8 @@ import cors from "cors"
 const app = express();
 const server = createServer(app);
 const io = new Server(server , {cors:{
-  origin:"*"
+  origin:"*",
+  methods: ["GET", "POST"]
 }})
 app.use(cors({
   origin:"*"
@@ -49,7 +50,7 @@ app.get('/', (req, res) => {
 });
 
 
-
-server.listen(3000, () => {
-  console.log('server running at http://localhost:3000');
+const PORT = process.env.PORT || 10000; 
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
 });

@@ -1,6 +1,13 @@
-import {io} from 'socket.io-client'
+import { io } from 'socket.io-client';
 
-export function connectWs (){
-   const host = window.location.hostname; 
-  return io(`http://${host}:3000`);
+export function connectWs() {
+  // If we are on localhost, connect to the local port 3000.
+  // If we are on Render, connect to the main URL without a port number.
+  const URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000' 
+    : 'https://anonimity.onrender.com';
+
+  return io(URL, {
+    transports: ['websocket'], // Highly recommended for Render to avoid polling errors
+  });
 }
